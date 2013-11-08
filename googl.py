@@ -6,9 +6,6 @@ Ivan Grishaev <ivan@grishaev.me>
 
 See http://code.google.com/intl/en/apis/urlshortener/overview.html
 
-TODO:
-    OAuth support;
-
 Usage:
 
 import googl
@@ -24,6 +21,8 @@ print client.expand(result["id"])
 >>> {u'status': u'OK', u'kind': u'urlshortener#url',
         u'id': u'http://goo.gl/WubiJ',
         u'longUrl': u'http://code.google.com/p/python-googl-client/'}
+
+oauth_client = googl.Googl("API_key", auth=googl.OAuth2Authorizer('oauth2_access_token')
 """
 __version__ = "0.1.1"
 __author__ = "Ivan Grishaev"
@@ -59,18 +58,38 @@ class GooglError(Exception):
     def __str__(self):
         return "Goo.gl error, code: %d, reason: %s" % (self.code, self.message)
 
+class OAuth2Authorizer(object):
+    def __init__(self, access_token):
+        self.access_token = access_token
+
+    def authorize(self, request):
+        request.add_header('Authorization', 'Bearer ' + self.access_token)
+
+class ClientLoginAuth(object):
+    def __init__(self, email, password):
+        self.token_string = ClientLoginAuth._get_client_login(email, password)
+
+    @staticmethod
+    def _get_client_login(email, password):
+        """Get client login by user creditants."""
+        import gdata.service
+        service = gdata.service.GDataService()
+        service.ClientLogin(email, password, service="urlshortener")
+        return service.current_token.get_token_string()
+
+    def authorize(self, request):
+        request.add_header("Authorization", "GoogleLogin auth=%s" % self.token_string)
 
 class Googl(object):
     """Goo.gl API class.
 
-    key: your API key, get it here: http://code.google.com/apis/console/
-    client_login: token for ClientLogin authenticating mechanism
+    key: your API key, get it here: http://code.google.com/apis/console/ client_login: token for ClientLogin authenticating mechanism
     api: current API version
     referer: optional Referer header (for Referer API limits)
     userip: optional IP (for IP API limits)
     """
-    def __init__(self, key, client_login=None, api="v1", userip=None, referer=None):
-        self.client_login = client_login
+    def __init__(self, key, auth=None, api="v1", userip=None, referer=None):
+        self.auth = auth
         self.key = key
         self.api = api
         self.userip = userip
@@ -130,8 +149,8 @@ class Googl(object):
 
         if self.referer is not None:
             request.add_header("Referer", self.referer)
-        if self.client_login is not None:
-            request.add_header("Authorization", "GoogleLogin auth=%s" % self.client_login)
+        if self.auth is not None:
+            self.auth.authorize(request)
 
         try:
             response = urllib2.urlopen(request)
@@ -139,12 +158,4 @@ class Googl(object):
         except urllib2.HTTPError, e:
             error = json.loads(e.fp.read())
             raise GooglError(error["error"]["code"], error["error"]["message"])
-
-
-def get_client_login(email, password):
-    """Get client login by user creditants."""
-    import gdata.service
-    service = gdata.service.GDataService()
-    service.ClientLogin(email, password, service="urlshortener")
-    return service.current_token.get_token_string()
 
