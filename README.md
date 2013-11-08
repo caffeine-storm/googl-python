@@ -19,8 +19,13 @@
         u'id': u'http://goo.gl/WubiJ',
         u'longUrl': u'http://code.google.com/p/python-googl-client/'
     }
-    
+
 # ClientLogin Auth
 
-    client_login = googl.get_client_login("login", "pass")
-    client = googl.Googl("API_key", client_login=client_login)
+    client_login = googl.ClientLoginAuth("login", "pass")
+    client = googl.Googl("API_key", auth=client_login)
+
+# OAuth2
+    oauth = googl.OAuth2Authorizer('oauth2 access token')
+    client = googl.Googl("API_key", auth=oauth)
+
