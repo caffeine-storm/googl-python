@@ -89,8 +89,8 @@ class Googl(object):
     userip: optional IP (for IP API limits)
     """
     def __init__(self, key, auth=None, api="v1", userip=None, referer=None):
-        self.auth = auth
         self.key = key
+        self.auth = auth
         self.api = api
         self.userip = userip
         self.referer = referer
