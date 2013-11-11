@@ -83,7 +83,8 @@ class ClientLoginAuth(object):
 class Googl(object):
     """Goo.gl API class.
 
-    key: your API key, get it here: http://code.google.com/apis/console/ client_login: token for ClientLogin authenticating mechanism
+    key: your API key, get it here: http://code.google.com/apis/console/
+    client_login: token for ClientLogin authenticating mechanism
     api: current API version
     referer: optional Referer header (for Referer API limits)
     userip: optional IP (for IP API limits)
